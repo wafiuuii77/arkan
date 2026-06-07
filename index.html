@@ -111,7 +111,8 @@
                     <input type="password" id="inputPass" class="form-control" value="123456">
                 </div>
             </div>
-            <button class="btn btn-primary w-100 fw-bold py-2 fs-5" id="loginBtn">دخول المنصة 🚀</button>
+            <a href="javascript:void(0);" class="btn btn-primary w-100 fw-bold py-2 fs-5" onclick="checkLoginSystem()">دخول المنصة 🚀</a>
+            
             <div id="loginError" class="text-danger small mt-2 fw-bold" style="display: none;">❌ خطأ في اسم المستخدم أو كلمة المرور!</div>
         </div>
     </div>
@@ -292,11 +293,6 @@
             { id: 102, name: "عمائر الصحافة التجارية ومكاتب", location: "الرياض - طريق الملك فهد", client: "شركة المربع العقارية", phone: "544444444", progress: 80, budget: 1200000, paid: 900000 }
         ];
 
-        // الانتظار حتى يرسم المتصفح الصفحة بالكامل ثم تفعيل دالة الدخول (حل مشكلة التعليق على قيت هوب)
-        window.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('loginBtn').onclick = checkLoginSystem;
-        });
-
         function showToastNotification(message, type = 'success') {
             var container = document.getElementById('toastContainer');
             var bgClass = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
@@ -407,7 +403,7 @@
                     <td>
                         <div class="input-group input-group-sm" style="width: 190px;">
                             <input type="number" class="form-control" placeholder="القيمة ر.س" id="amountInput_${p.id}">
-                            <button class="btn btn-warning fw-bold" onclick="addPayment(${p.id})"><i class="fa-solid fa-plus"></i> رصد</button>
+                            <button class="btn btn-warning" onclick="addPayment(${p.id})"><i class="fa-solid fa-plus"></i> رصد</button>
                         </div>
                     </td>
                 </tr>`;
@@ -576,7 +572,7 @@
             var count = parseInt(localStorage.getItem('arkan_db_reports_count')) + 1;
             localStorage.setItem('arkan_db_reports_count', count.toString());
 
-            pushLogSystem(`تم بنجاح توليد وأتمتة التقرير للمشروع (${projects[idx].name}) بنسبة إنجاز بلغت ${progress}%.`);
+            pushLogSystem(`تم بنجاح تليق وأتمتة التقرير للمشروع (${projects[idx].name}) بنسبة إنجاز بلغت ${progress}%.`);
 
             var msg = encodeURIComponent(document.getElementById('whatsappPreview').innerText);
             var targetPhone = projects[idx].phone;
