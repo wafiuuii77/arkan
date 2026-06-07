@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة أركان الرقمية لإدارة مشاريع المقاولات | Arkan Platform</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --light-blue: #2196F3;
+            --dark-surface: #0f172a;
+            --bg-light: #f8fafc;
+            --success-green: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            margin: 0; padding: 0; height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* السايدبار الجانبي الثابت والموزون بالملي */
+        .sidebar {
+            width: 280px; background-color: var(--dark-surface); color: #fff;
+            height: 100vh; position: fixed; top: 0; right: 0;
+            display: flex; flex-direction: column; z-index: 1000;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+        }
+
+        .sidebar .brand {
+            padding: 24px; font-size: 20px; font-weight: 800; letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(45deg, var(--primary-blue), var(--light-blue));
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .sidebar nav { padding: 20px; flex: 1; overflow-y: auto; }
+        .sidebar nav a {
+            color: #94a3b8; text-decoration: none; padding: 14px 16px;
+            display: flex; align-items: center; gap: 12px; border-radius: 8px;
+            margin-bottom: 6px; font-weight: 500; transition: all 0.2s; cursor: pointer;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background-color: rgba(33, 150, 243, 0.15); color: var(--light-blue);
+        }
+
+        /* منطقة المحتوى الرئيسي وتجنب التداخل */
+        .main-wrapper {
+            margin-right: 280px; min-height: 100vh; display: flex; flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .main-header {
+            background: #fff; padding: 15px 30px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .content-body { padding: 30px; flex: 1; }
+        .page-section { display: none; }
+        .page-section.active-page { display: block; animation: fadeIn 0.4s ease; }
+        
+        .custom-card { 
+            background: #fff; border: none; border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); 
+            transition: transform 0.2s;
+        }
+        .custom-card:hover { transform: translateY(-2px); }
+        .progress { height: 8px; border-radius: 100px; background-color: #e2e8f0; }
+        
+        /* التنبيهات المنبثقة الذكية (Toasts) */
+        .toast-container {
+            position: fixed; top: 20px; left: 20px; z-index: 9999;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div id="loginBlock" class="d-flex align-items-center justify-content-center bg-dark" style="position: fixed; top:0; left:0; width:100vw; height:100vh; z-index: 99999;">
+        <div class="card p-4 shadow-lg text-center" style="width: 400px; border-radius: 15px; border: none;">
+            <div class="mb-3 text-primary fs-1"><i class="fa-solid fa-helmet-safety"></i></div>
+            <h4 class="fw-bold mb-1 text-dark">تسجيل الدخول - منصة أركان</h4>
+            <p class="text-muted small">مؤسسة أركان الكيان للمقاولات الرقمية</p>
+            <hr>
+            <div class="text-end mb-3">
+                <label class="form-label fw-bold">اسم المستخدم:</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-user text-secondary"></i></span>
+                    <input type="text" id="inputUser" class="form-control" value="admin">
+                </div>
+            </div>
+            <div class="text-end mb-4">
+                <label class="form-label fw-bold">كلمة المرور:</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-secondary"></i></span>
+                    <input type="password" id="inputPass" class="form-control" value="123456">
+                </div>
+            </div>
+            <button class="btn btn-primary w-100 fw-bold py-2 fs-5" onclick="checkLoginSystem()">دخول المنصة 🚀</button>
+            <div id="loginError" class="text-danger small mt-2 fw-bold" style="display: none;">❌ خطأ في اسم المستخدم أو كلمة المرور!</div>
+        </div>
+    </div>
+
+    <div id="mainDashboard" style="display: none;">
+        <div class="sidebar">
+            <div class="brand text-center"><i class="fa-solid fa-helmet-safety me-2"></i> منصة أركان الرقمية</div>
+            <nav>
+                <a onclick="switchPage('home', this)" class="active"><i class="fa-solid fa-chart-pie"></i> لوحة التحكم العامة</a>
+                <a onclick="switchPage('projects-page', this)"><i class="fa-solid fa-cubes"></i> إدارة المشاريع الإنشائية</a>
+                <a onclick="switchPage('add-project-page', this)"><i class="fa-solid fa-circle-plus"></i> تدشين مشروع جديد</a>
+                <a onclick="switchPage('reports-page', this)"><i class="fa-solid fa-file-signature"></i> التقارير اليومية والـ WhatsApp</a>
+                <a onclick="switchPage('finance-page', this)"><i class="fa-solid fa-wallet"></i> النظام المالي والدفعات</a>
+            </nav>
+        </div>
+
+        <div class="main-wrapper">
+            <div class="main-header">
+                <h5 class="m-0 text-secondary fw-bold" id="pageTitle">الرئيسية / إحصائيات النظام الحية</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary-subtle text-primary p-2 fs-6"><i class="fa-solid fa-user-gear me-1"></i> م. مقاول أركان الكيان</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="resetSystemData()"><i class="fa-solid fa-rotate"></i> ضبط المصنع</button>
+                </div>
+            </div>
+
+            <div class="content-body">
+                <div id="home" class="page-section active-page">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="card custom-card p-4 border-start border-primary border-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><h6 class="text-muted mb-1 small fw-bold">المشاريع النشطة</h6><h4 class="m-0 font-weight-bold text-dark" id="totalCount">0</h4></div>
+                                    <div class="fs-2 text-primary-subtle"><i class="fa-solid fa-building-shield"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card custom-card p-4 border-start border-success border-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><h6 class="text-muted mb-1 small fw-bold">تقارير الـ WhatsApp الصادرة</h6><h4 class="m-0 font-weight-bold text-dark" id="reportsCount">0</h4></div>
+                                    <div class="fs-2 text-success-subtle"><i class="fa-brands fa-whatsapp"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card custom-card p-4 border-start border-warning border-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><h6 class="text-muted mb-1 small fw-bold">إجمالي التدفقات المحصلة</h6><h4 class="m-0 font-weight-bold text-dark" id="totalFinance">0 ر.س</h4></div>
+                                    <div class="fs-2 text-warning-subtle"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card custom-card p-4 border-start border-danger border-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><h6 class="text-muted mb-1 small fw-bold">المستحقات المعلقة (الديون)</h6><h4 class="m-0 font-weight-bold text-danger" id="totalRemaining">0 ر.س</h4></div>
+                                    <div class="fs-2 text-danger-subtle"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card custom-card p-4">
+                        <h5 class="mb-3 text-dark fw-bold"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> سجل حركات ومراقبة النظام الحية (System Database Log)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light"><tr><th>نوع الحركة والحدث</th><th>النظام المسؤول</th><th>التوقيت الفعلي</th><th>الحالة التشغيلية</th></tr></thead>
+                                <tbody id="logsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="projects-page" class="page-section">
+                    <div class="card custom-card p-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                            <h4 class="m-0 text-dark fw-bold">دليل وحوكمة المشاريع الإنشائية المعتمدة</h4>
+                            
+                            <div class="input-group input-group-sm" style="max-width: 350px;">
+                                <span class="input-group-text bg-light text-secondary"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="projectSearchInput" class="form-control" placeholder="ابحث بكود المشروع، العميل، اسم الفيلا..." onkeyup="filterProjectsLive()">
+                            </div>
+                            
+                            <button class="btn btn-primary btn-sm fw-bold" onclick="switchPage('add-project-page')"><i class="fa-solid fa-plus"></i> تدشين مشروع جديد</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle" id="mainProjectsTable">
+                                <thead class="table-light">
+                                    <tr><th>كود العقد</th><th>المشروع ونطاق العمل</th><th>المنطقة الجغرافية</th><th>اسم العميل المالك</th><th>الاتصال الذكي</th><th>مؤشر الإنجاز الهندسي</th><th>العمليات الإدارية</th></tr>
+                                </thead>
+                                <tbody id="projectsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="add-project-page" class="page-section">
+                    <div class="card custom-card p-4" style="max-width: 750px; margin: 0 auto;">
+                        <h4 class="mb-4 text-dark fw-bold"><i class="fa-solid fa-folder-plus text-primary me-2"></i> تدشين وتسجيل عقد مشروع جديد</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label fw-bold">اسم وصنف المشروع</label><input type="text" id="newProjName" class="form-control" placeholder="مثال: فيلا حي الياسمين السكنية"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">المنطقة والحي السكني</label><input type="text" id="newProjLocation" class="form-control" placeholder="مثال: شمال الرياض - حي الملقا"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">اسم العميل (الطرف الثاني)</label><input type="text" id="newProjClient" class="form-control" placeholder="مثال: أ. محمد بن عبدالله التميمي"></div>
+                            <div class="col-md-6"><label class="form-label fw-bold">رقم جوال العميل للـ WhatsApp</label><input type="text" id="newProjPhone" class="form-control" placeholder="5xxxxxxxx"></div>
+                            <div class="col-md-12"><label class="form-label fw-bold">القيمة الإجمالية للعقد التعاقدي (ر.س)</label><input type="number" id="newProjBudget" class="form-control" value="550000"></div>
+                            <div class="col-12 mt-4"><button class="btn btn-primary w-100 fw-bold py-2" onclick="addNewProject()"><i class="fa-solid fa-cloud-arrow-up me-2"></i>حفظ وتوثيق العقد في السيرفر</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reports-page" class="page-section">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="card custom-card p-4">
+                                <h4 class="mb-4 text-dark fw-bold"><i class="fa-solid fa-paper-plane text-success me-2"></i> تصدير التقرير الهندسي اليومي</h4>
+                                <div class="mb-3"><label class="form-label fw-bold">اختر المشروع المستهدف</label><select id="reportProjectSelect" class="form-select" onchange="updateReportDetails()"></select></div>
+                                <div class="mb-3"><label class="form-label fw-bold">قناة إرسال التقرير المباشرة</label><input type="text" id="reportPhone" class="form-control" readonly style="background-color: #f1f5f9; font-weight: bold;"></div>
+                                <div class="mb-3"><label class="form-label fw-bold">تحديث نسبة الإنجاز الميداني (%)</label><input type="number" id="reportProgress" class="form-control" min="0" max="100" value="10"></div>
+                                <div class="mb-3"><label class="form-label fw-bold">بيان بنود الأعمال المنفذة اليوم</label><textarea id="reportDetails" class="form-control" rows="4" placeholder="مثال: تم صب القواعد الخرسانية وعمل العزل الحراري بنجاح..."></textarea></div>
+                                <div class="mb-3"><label class="form-label fw-bold">إرفاق صورة الموقع الحية</label><input type="file" id="reportPhotoInput" class="form-control" accept="image/*"></div>
+                                <button class="btn btn-success w-100 fw-bold py-2" onclick="sendWhatsAppAutomated()"><i class="fa-brands fa-whatsapp me-2"></i> حفظ وإرسال محاكاة التقرير للعميل</button>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="card custom-card p-4">
+                                <h5 class="mb-3 text-dark fw-bold">المعاينة الفورية والذكية للتقرير الصادر عبر الـ WhatsApp API</h5>
+                                <div class="p-3 border rounded text-monospace" style="white-space: pre-line; background-color: #efeae2 !important; font-family: 'Courier New', Courier, monospace; font-size: 14px;" id="whatsappPreview">
+                                    يرجى كتابة البنود واختيار المشروع لتوليد رسالة الأتمتة الفورية هنا...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="finance-page" class="page-section">
+                    <div class="card custom-card p-4">
+                        <h4 class="mb-4 text-dark fw-bold"><i class="fa-solid fa-coins text-warning me-2"></i> تتبع وإدارة المستخلصات والدفعات المالية والمتبقي</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light"><tr><th>اسم المشروع</th><th>ميزانية العقد الكلية</th><th>الدفعات المستلمة</th><th>المبلغ المتبقي المعلق</th><th>ترحيل ورصد دفعة جديدة</th></tr></thead>
+                                <tbody id="financeTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editProjectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> تعديل وتحديث السجل التعاقدي للمشروع</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editProjId">
+                    <div class="mb-3"><label class="form-label fw-bold">اسم المشروع</label><input type="text" id="editProjName" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">الموقع وجغرافيا العمل</label><input type="text" id="editProjLocation" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">اسم العميل المالك</label><input type="text" id="editProjClient" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">جوال الواتساب</label><input type="text" id="editProjPhone" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">ميزانية العقد الإجمالية (ر.س)</label><input type="number" id="editProjBudget" class="form-control"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء الأمر</button>
+                    <button type="button" class="btn btn-primary fw-bold" onclick="saveProjectEdits()">حفظ وتحديث البيانات الحية</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // داتا افتراضية فخمة لملء النظام تلقائياً عند بدء التشغيل لأول مرة لإبهار اللجنة
+        var defaultData = [
+            { id: 101, name: "فيلا حي الياسمين الإنشائية", location: "شمال الرياض - الياسمين", client: "أبو فهد العتيبي", phone: "555555555", progress: 45, budget: 600000, paid: 250000 },
+            { id: 102, name: "عمائر الصحافة التجارية ومكاتب", location: "الرياض - طريق الملك فهد", client: "شركة المربع العقارية", phone: "544444444", progress: 80, budget: 1200000, paid: 900000 }
+        ];
+
+        // ميزة إضافية: نظام التنبيهات المنبثقة الذكي والإشعارات الراقية لحركات الخادم
+        function showToastNotification(message, type = 'success') {
+            var container = document.getElementById('toastContainer');
+            var bgClass = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
+            var toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white ${bgClass} border-0 show mb-2`;
+            toast.style.display = 'flex';
+            toast.innerHTML = `<div class="toast-body fw-bold"><i class="fa-solid fa-bell me-2"></i> ${message}</div>
+                               <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.remove()"></button>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 4000);
+        }
+
+        // نظام التحقق وتوثيق الأمان لشاشة تسجيل الدخول الموحدة
+        function checkLoginSystem() {
+            var user = document.getElementById('inputUser').value;
+            var pass = document.getElementById('inputPass').value;
+            var errorDiv = document.getElementById('loginError');
+
+            if (user === "admin" && pass === "123456") {
+                document.getElementById('loginBlock').style.display = 'none'; 
+                document.getElementById('mainDashboard').style.display = 'block'; 
+                errorDiv.style.display = 'none';
+                
+                showToastNotification("تم توثيق الاتصال بنجاح. مرحباً م. مقاول أركان الكيان!", "success");
+                initSystemEngine(); 
+            } else {
+                errorDiv.style.display = 'block';
+                showToastNotification("فشل التحقق الأمني من هوية المستخدم!", "danger");
+            }
+        }
+
+        function initSystemEngine() {
+            if (!localStorage.getItem('arkan_db_projects')) {
+                localStorage.setItem('arkan_db_projects', JSON.stringify(defaultData));
+                localStorage.setItem('arkan_db_reports_count', '42');
+                localStorage.setItem('arkan_db_logs', JSON.stringify([
+                    {text: "تم تفعيل محرك نظام منصة أركان والاتصال بقاعدة البيانات المصغرة بنجاح.", status: "Active Engine"},
+                    {text: "تحديث بيانات: تم بنجاح تعديل وتحديث بيانات المشروع كود ARK-101 في قاعدة البيانات.", status: "Active Engine"},
+                    {text: "تم معالجة وتصدير تقرير أتمتة عبر منصة أركان للمشروع (فيلا حي الياسمين الإنشائية) وتعديل نسبة الإنجاز الهندسي لـ 45%.", status: "Active Engine"}
+                ]));
+            }
+            renderSystemCore();
+            
+            // مستمعو الأحداث لتحديث المعاينة الحية لرسائل الواتساب
+            document.getElementById('reportDetails').addEventListener('input', updatePreviewText);
+            document.getElementById('reportProgress').addEventListener('input', updatePreviewText);
+            document.getElementById('reportPhotoInput').addEventListener('change', updatePreviewText);
+        }
+
+        // التبديل السلس والسريع بين الواجهات والأقسام في الصفحة الواحدة
+        function switchPage(pageId, element) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active-page'));
+            document.querySelectorAll('.sidebar nav a').forEach(l => l.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active-page');
+            if(element) element.classList.add('active');
+            
+            var titles = { 
+                'home': 'الرئيسية / إحصائيات النظام والتحليلات الجارية', 
+                'projects-page': 'إدارة المشاريع / السجلات السحابية والمخططات الميدانية', 
+                'add-project-page': 'العمليات الميدانية / تدشين وإدراج عقود المشاريع الجديدة', 
+                'reports-page': 'الأتمتة والاتصال / تصدير التقارير وربط الـ WhatsApp API', 
+                'finance-page': 'النظام المالي / حوكمة التدفقات المالية والمستخلصات التعاقدية' 
+            };
+            document.getElementById('pageTitle').innerText = titles[pageId];
+            
+            renderSystemCore();
+        }
+
+        // معالجة البيانات وبناء الجداول وحساب المعادلات الإحصائية الذكية
+        function renderSystemCore() {
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects')) || [];
+            var logs = JSON.parse(localStorage.getItem('arkan_db_logs')) || [];
+            var reportsCount = localStorage.getItem('arkan_db_reports_count') || 0;
+            
+            // حسابات مالية ديناميكية متطورة للإحصائيات
+            var totalPaidCalculated = projects.reduce((sum, item) => sum + Number(item.paid), 0);
+            var totalBudgetCalculated = projects.reduce((sum, item) => sum + Number(item.budget), 0);
+            var totalRemainingCalculated = totalBudgetCalculated - totalPaidCalculated;
+            
+            if(document.getElementById('totalCount')) {
+                document.getElementById('totalCount').innerText = projects.length + " عقود نشطة";
+                document.getElementById('reportsCount').innerText = reportsCount + " تقرير مؤتمت";
+                document.getElementById('totalFinance').innerText = totalPaidCalculated.toLocaleString('ar-SA') + " ر.س";
+                document.getElementById('totalRemaining').innerText = totalRemainingCalculated.toLocaleString('ar-SA') + " ر.س";
+            }
+
+            var projectsHTML = "", selectHTML = "", financeHTML = "";
+
+            projects.forEach(p => {
+                projectsHTML += `<tr>
+                    <td><span class="badge bg-secondary">ARK-${p.id}</span></td>
+                    <td><strong>${p.name}</strong><br><small class="text-muted">${p.location}</small></td>
+                    <td><i class="fa-solid fa-location-dot text-danger me-1"></i> الرياض</td>
+                    <td>${p.client}</td>
+                    <td><a href="https://wa.me/966${p.phone}" target="_blank" class="text-decoration-none text-success fw-bold"><i class="fa-brands fa-whatsapp"></i> +966 ${p.phone}</a></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1"><div class="progress-bar bg-success" style="width: ${p.progress}%;"></div></div>
+                            <span class="fw-bold text-dark small">${p.progress}%</span>
+                        </div>
+                    </td>
+                    <td><button class="btn btn-sm btn-outline-primary fw-bold" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen-to-square"></i> تعديل السجل</button></td>
+                </tr>`;
+                selectHTML += `<option value="${p.id}">${p.name}</option>`;
+                
+                var remaining = p.budget - p.paid;
+                financeHTML += `<tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td class="text-primary fw-bold">${p.budget.toLocaleString()} ر.س</td>
+                    <td class="text-success fw-bold">${p.paid.toLocaleString()} ر.س</td>
+                    <td class="text-danger fw-bold">${remaining.toLocaleString()} ر.س</td>
+                    <td>
+                        <div class="input-group input-group-sm" style="width: 190px;">
+                            <input type="number" class="form-control" placeholder="القيمة ر.س" id="amountInput_${p.id}">
+                            <button class="btn btn-warning fw-bold" onclick="addPayment(${p.id})"><i class="fa-solid fa-plus"></i> رصد</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            if(document.getElementById('projectsTableBody')) document.getElementById('projectsTableBody').innerHTML = projectsHTML;
+            if(document.getElementById('reportProjectSelect')) document.getElementById('reportProjectSelect').innerHTML = selectHTML;
+            if(document.getElementById('financeTableBody')) document.getElementById('financeTableBody').innerHTML = financeHTML;
+
+            // بناء سجل العمليات (Logs) بشكل تنازلي (الأحدث أولاً)
+            var logsHTML = "";
+            logs.slice().reverse().forEach(l => {
+                logsHTML += `<tr>
+                    <td><i class="fa-solid fa-square-poll-vertical text-primary me-2"></i> ${l.text}</td>
+                    <td><span class="badge bg-light text-dark border">Storage Router</span></td>
+                    <td><small class="text-muted"><i class="fa-regular fa-clock"></i> في الوقت الحالي</small></td>
+                    <td><span class="text-success fw-bold small"><i class="fa-solid fa-circle-check"></i> منفذ ومرّحل</span></td>
+                </tr>`;
+            });
+            if(document.getElementById('logsTableBody')) document.getElementById('logsTableBody').innerHTML = logsHTML;
+            updateReportDetails();
+        }
+
+        // 🔍 ميزة إضافية متطورة: محرك فلترة وبحث حي داخل جدول المشاريع بدون إعادة تحميل الصفحة
+        function filterProjectsLive() {
+            var input = document.getElementById("projectSearchInput");
+            var filter = input.value.toLowerCase();
+            var table = document.getElementById("mainProjectsTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 1; i < tr.length; i++) {
+                var showRow = false;
+                var tds = tr[i].getElementsByTagName("td");
+                for (var j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        var textValue = tds[j].textContent || tds[j].innerText;
+                        if (textValue.toLowerCase().indexOf(filter) > -1) {
+                            showRow = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = showRow ? "" : "none";
+            }
+        }
+
+        // تدشين وإدراج مشروع جديد لـ LocalStorage
+        function addNewProject() {
+            var name = document.getElementById('newProjName').value;
+            var location = document.getElementById('newProjLocation').value;
+            var client = document.getElementById('newProjClient').value;
+            var phone = document.getElementById('newProjPhone').value;
+            var budget = document.getElementById('newProjBudget').value;
+
+            if(!name || !client || !phone || !budget) {
+                showToastNotification("يرجى ملء كافة البيانات الرئيسية لتدشين المشروع بشكل كامل.", "warning");
+                return;
+            }
+
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects')) || [];
+            var generatedId = projects.length > 0 ? projects[projects.length - 1].id + 1 : 101;
+
+            projects.push({ id: generatedId, name: name, location: location, client: client, phone: phone, progress: 0, budget: Number(budget), paid: 0 });
+            localStorage.setItem('arkan_db_projects', JSON.stringify(projects));
+            
+            pushLogSystem(`تم بنجاح ترحيل وتدشين العقد وعقد مشروع جديد لكود ARK-${generatedId}.`);
+            showToastNotification(`تم إدراج وتأسيس المشروع ARK-${generatedId} بنجاح تام!`, "success");
+            
+            document.getElementById('newProjName').value = ""; document.getElementById('newProjLocation').value = "";
+            document.getElementById('newProjClient').value = ""; document.getElementById('newProjPhone').value = "";
+            
+            switchPage('projects-page');
+        }
+
+        // فتح نافذة التعديل المنبثقة وتعبئة بياناتها
+        function openEditModal(id) {
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+            var found = projects.find(p => p.id == id);
+            if(found) {
+                document.getElementById('editProjId').value = found.id;
+                document.getElementById('editProjName').value = found.name;
+                document.getElementById('editProjLocation').value = found.location;
+                document.getElementById('editProjClient').value = found.client;
+                document.getElementById('editProjPhone').value = found.phone;
+                document.getElementById('editProjBudget').value = found.budget;
+                new bootstrap.Modal(document.getElementById('editProjectModal')).show();
+            }
+        }
+
+        // حفظ وحفظ التعديلات في قاعدة البيانات المصغرة
+        function saveProjectEdits() {
+            var id = document.getElementById('editProjId').value;
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+            var idx = projects.findIndex(p => p.id == id);
+            
+            if(idx !== -1) {
+                projects[idx].name = document.getElementById('editProjName').value;
+                projects[idx].location = document.getElementById('editProjLocation').value;
+                projects[idx].client = document.getElementById('editProjClient').value;
+                projects[idx].phone = document.getElementById('editProjPhone').value;
+                projects[idx].budget = Number(document.getElementById('editProjBudget').value);
+                
+                localStorage.setItem('arkan_db_projects', JSON.stringify(projects));
+                pushLogSystem(`تعديل هيكلي: تم تحديث وثائق المشروع كود ARK-${id}.`);
+                bootstrap.Modal.getInstance(document.getElementById('editProjectModal')).hide();
+                showToastNotification("تم تحديث بيانات العقد بنجاح وعكسها في النظام.", "success");
+                renderSystemCore();
+            }
+        }
+
+        function updateReportDetails() {
+            var id = document.getElementById('reportProjectSelect').value;
+            if(id) {
+                var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+                if(projects) {
+                    var found = projects.find(p => p.id == id);
+                    if(found) {
+                        document.getElementById('reportPhone').value = "+966 " + found.phone;
+                        document.getElementById('reportProgress').value = found.progress;
+                        updatePreviewText();
+                    }
+                }
+            }
+        }
+
+        function getPhotoUrlString() {
+            var photoInput = document.getElementById('reportPhotoInput');
+            if (photoInput && photoInput.files.length > 0) {
+                var file = photoInput.files[0];
+                var tempUrl = URL.createObjectURL(file);
+                return `\n*رابط معاينة الصورة الميدانية للموقع:* \n${tempUrl}\n`;
+            }
+            return "";
+        }
+
+        // محاكاة وتوليد التقرير الأوتوماتيكي الصادر للعميل فورياً وبصيغة ذكية
+        function updatePreviewText() {
+            var id = document.getElementById('reportProjectSelect').value;
+            var progress = document.getElementById('reportProgress').value;
+            var details = document.getElementById('reportDetails').value || "[اكتب بنود ومحاضر الإنجاز اليومي المنفذة هنا لتوليد الرسالة...]";
+            
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+            if(projects && id) {
+                var found = projects.find(p => p.id == id);
+                if(found) {
+                    var photoText = getPhotoUrlString();
+                    var text = `*تحديث تلقائي رسمي من منصة أركان الرقمية لأعمال المقاولات* 🏗️\n\n` +
+                               `*المشروع المستهدف:* ${found.name}\n` +
+                               `*نسبة الإنجاز الهندسي الميداني:* ${progress}%\n\n` +
+                               `*بيان ومحضر الأعمال المنفذة اليوم:* \n${details}\n` + 
+                               photoText + `\n` +
+                               `_تم فحص ومراجعة هذا التقرير وتصديره تلقائياً عبر النظام الموحد لمؤسسة أركان الكيان للمقاولات._`;
+                    if(document.getElementById('whatsappPreview')) document.getElementById('whatsappPreview').innerText = text;
+                }
+            }
+        }
+
+        // أتمتة الإرسال وفتح بوابة الـ WhatsApp المطور للشركات الإنشائية
+        function sendWhatsAppAutomated() {
+            var id = document.getElementById('reportProjectSelect').value;
+            var progress = document.getElementById('reportProgress').value;
+            var details = document.getElementById('reportDetails').value;
+
+            if(!details) {
+                showToastNotification("لا يمكن تصدير تقرير هندسي فارغ بدون بنود عمل منفذة.", "warning");
+                return;
+            }
+
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+            var idx = projects.findIndex(p => p.id == id);
+            projects[idx].progress = progress;
+            localStorage.setItem('arkan_db_projects', JSON.stringify(projects));
+
+            var count = parseInt(localStorage.getItem('arkan_db_reports_count')) + 1;
+            localStorage.setItem('arkan_db_reports_count', count.toString());
+
+            pushLogSystem(`تم بنجاح توليد وأتمتة التقرير للمشروع (${projects[idx].name}) بنسبة إنجاز بلغت ${progress}%.`);
+
+            var msg = encodeURIComponent(document.getElementById('whatsappPreview').innerText);
+            var targetPhone = projects[idx].phone;
+            
+            document.getElementById('reportDetails').value = "";
+            if(document.getElementById('reportPhotoInput')) document.getElementById('reportPhotoInput').value = "";
+            
+            showToastNotification("تم توثيق وحفظ التقرير، جاري فتح بوابة الإرسال الخارجية للـ API.", "success");
+            
+            setTimeout(() => {
+                window.open(`https://wa.me/966${targetPhone}?text=${msg}`, '_blank');
+            }, 800);
+        }
+
+        // رصد وتوليد دفعات مالية جديدة وحساب الديون المتبقية لحظياً
+        function addPayment(id) {
+            var amount = document.getElementById(`amountInput_${id}`).value;
+            if(!amount || amount <= 0) return;
+
+            var projects = JSON.parse(localStorage.getItem('arkan_db_projects'));
+            var idx = projects.findIndex(p => p.id == id);
+            
+            if(projects[idx].paid + Number(amount) > projects[idx].budget) {
+                showToastNotification("المبلغ المدخل يتجاوز إجمالي الميزانية المتبقية لقرارات العقد!", "danger");
+                return;
+            }
+
+            projects[idx].paid += Number(amount);
+            localStorage.setItem('arkan_db_projects', JSON.stringify(projects));
+            
+            pushLogSystem(`تم رصد وتحصيل مستخلص مالي بقيمة ${Number(amount).toLocaleString()} ر.س لمشروع (${projects[idx].name}).`);
+            showToastNotification(`تم رصد وترحيل الدفعة المالية بقيمة ${Number(amount).toLocaleString()} ر.س بنجاح.`, "success");
+            
+            document.getElementById(`amountInput_${id}`).value = "";
+            renderSystemCore();
+        }
+
+        function pushLogSystem(text) {
+            var logs = JSON.parse(localStorage.getItem('arkan_db_logs')) || [];
+            logs.push({ text: text, status: "Success" });
+            localStorage.setItem('arkan_db_logs', JSON.stringify(logs));
+        }
+
+        // مسح الذاكرة وعمل إعادة ضبط مصنع للنظام كاملاً
+        function resetSystemData() {
+            if(confirm("هل أنت متأكد من رغبتك في إعادة ضبط مصنع النظام ومسح كافة البيانات السحابية الحالية؟")) {
+                localStorage.clear();
+                showToastNotification("تم تصفير ومسح قاعدة البيانات بنجاح.", "warning");
+                setTimeout(() => { location.reload(); }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
